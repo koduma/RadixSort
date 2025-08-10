@@ -65,25 +65,31 @@ bool check_sort(int a[],int b[],int n){
 }
 
 void r_sort(int a[],int n){
-
     int minbit=0;
-    bool div8=true;
-    bool div16=true;
-    bool div24=true;
+    bool bit8_0=true;
+    bool bit16_0=true;
+    bool bit24_0=true;
+    bool bit8_1=true;
+    bool bit16_1=true;
+    bool bit24_1=true;
     int maxval = 0;
     for (int i = 0; i < n; i++) {
-	if (abs(a[i]) > maxval) {maxval = abs(a[i]);}
+    if (abs(a[i]) > maxval) {maxval = abs(a[i]);}
     int v = abs(a[i]);
     int b8  = v & 0xFF;
     int b16 = v & 0xFFFF;
     int b24 = v & 0xFFFFFF;
-    if (!(b8  == 0x00 || b8  == 0xFF)){div8  = false;}
-    if (!(b16 == 0x0000 || b16 == 0xFFFF)){div16 = false;}
-    if (!(b24 == 0x000000 || b24 == 0xFFFFFF)) {div24 = false;}
+    if (b8  != 0x00){bit8_0  = false;}
+    if (b16 != 0x0000){bit16_0 = false;}
+    if (b24 != 0x000000) {bit24_0 = false;}
+    if (b8  != 0xFF){bit8_1  = false;}
+    if (b16 != 0xFFFF){bit16_1 = false;}
+    if (b24 != 0xFFFFFF) {bit24_1 = false;}    
     }
-    if(div8){minbit=1;}
-    if(div16){minbit=2;}
-    if(div24){minbit=3;}
+    if(bit24_0 || bit24_1){minbit = 3;}
+    else if(bit16_0 || bit16_1){minbit = 2;}
+    else if(bit8_0  || bit8_1 ){minbit = 1;}
+    else {minbit = 0;}
     int maxbit = 0;
     while (maxval > 0) {
         maxbit++;
