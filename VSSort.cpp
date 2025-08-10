@@ -66,12 +66,22 @@ bool check_sort(int a[],int b[],int n){
 
 void r_sort(int a[],int n){
 
+    int minbit=0;
+    bool div8=true;
+    bool div16=true;
+    bool div24=true;
     int maxval = 0;
     for (int i = 0; i < n; i++) {
         if (abs(a[i]) > maxval) {
             maxval = abs(a[i]);
         }
+        if((a[i]%256)!=0){div8=false;}
+        if((a[i]%65536)!=0){div16=false;}
+        if((a[i]%16777216)!=0){div24=false;}
     }
+    if(div8){minbit=1;}
+    if(div16){minbit=2;}
+    if(div24){minbit=3;}
     int maxbit = 0;
     while (maxval > 0) {
         maxbit++;
@@ -79,7 +89,8 @@ void r_sort(int a[],int n){
     }
     if (maxbit == 0) {maxbit = 1;}
     
-    for(int loop=0;loop<maxbit;loop++){  
+    
+    for(int loop=minbit;loop<maxbit;loop++){  
 
     int bucket[530]={0};    
 
