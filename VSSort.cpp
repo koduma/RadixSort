@@ -72,12 +72,14 @@ void r_sort(int a[],int n){
     bool div24=true;
     int maxval = 0;
     for (int i = 0; i < n; i++) {
-        if (abs(a[i]) > maxval) {
-            maxval = abs(a[i]);
-        }
-        if((a[i]%256)!=0){div8=false;}
-        if((a[i]%65536)!=0){div16=false;}
-        if((a[i]%16777216)!=0){div24=false;}
+	if (abs(a[i]) > maxval) {maxval = abs(a[i]);}
+    int v = abs(a[i]);
+    int b8  = v & 0xFF;
+    int b16 = v & 0xFFFF;
+    int b24 = v & 0xFFFFFF;
+    if (!(b8  == 0x00 || b8  == 0xFF)){div8  = false;}
+    if (!(b16 == 0x0000 || b16 == 0xFFFF)){div16 = false;}
+    if (!(b24 == 0x000000 || b24 == 0xFFFFFF)) {div24 = false;}
     }
     if(div8){minbit=1;}
     if(div16){minbit=2;}
