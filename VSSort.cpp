@@ -37,7 +37,9 @@ int tmp[2][N];
 int arr[5][N];
 
 int compare(const void* a, const void* b) {
-    return *(int*)a - *(int*)b;
+    int x = *(const int*)a;
+    int y = *(const int*)b;
+    return (x > y) - (x < y);  // オーバーフローしない
 }
 
 int rnd(int mini, int maxi) {
@@ -65,31 +67,10 @@ bool check_sort(int a[],int b[],int n){
 }
 
 void r_sort(int a[],int n){
-    int minbit=0;
-    bool bit8_0=true;
-    bool bit16_0=true;
-    bool bit24_0=true;
-    bool bit8_1=true;
-    bool bit16_1=true;
-    bool bit24_1=true;
     int maxval = 0;
     for (int i = 0; i < n; i++) {
     if (abs(a[i]) > maxval) {maxval = abs(a[i]);}
-    int v = abs(a[i]);
-    int b8  = v & 0xFF;
-    int b16 = v & 0xFFFF;
-    int b24 = v & 0xFFFFFF;
-    if (b8  != 0x00){bit8_0  = false;}
-    if (b16 != 0x0000){bit16_0 = false;}
-    if (b24 != 0x000000) {bit24_0 = false;}
-    if (b8  != 0xFF){bit8_1  = false;}
-    if (b16 != 0xFFFF){bit16_1 = false;}
-    if (b24 != 0xFFFFFF) {bit24_1 = false;}    
     }
-    if(bit24_0 || bit24_1){minbit = 3;}
-    else if(bit16_0 || bit16_1){minbit = 2;}
-    else if(bit8_0  || bit8_1 ){minbit = 1;}
-    else {minbit = 0;}
     int maxbit = 0;
     while (maxval > 0) {
         maxbit++;
@@ -98,7 +79,7 @@ void r_sort(int a[],int n){
     if (maxbit == 0) {maxbit = 1;}
     
     
-    for(int loop=minbit;loop<maxbit;loop++){  
+    for(int loop=0;loop<maxbit;loop++){  
 
     int bucket[530]={0};    
 
