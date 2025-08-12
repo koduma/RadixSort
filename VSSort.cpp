@@ -67,11 +67,19 @@ bool check_sort(int a[],int b[],int n){
 }
 
 void r_sort(int a[],int n){
-
-    int maxbit = 0;
     int maxval = 0;
+    for (int i = 0; i < n; i++) {
+    if (abs(a[i]) > maxval) {maxval = abs(a[i]);}
+    }
+    int maxbit = 0;
+    while (maxval > 0) {
+        maxbit++;
+        maxval >>= 8;
+    }
+    if (maxbit == 0) {maxbit = 1;}
     
-    for(int loop=0;;loop++){  
+    
+    for(int loop=0;loop<maxbit;loop++){  
 
     int bucket[530]={0};    
 
@@ -93,7 +101,6 @@ void r_sort(int a[],int n){
         
     for(int i=n-1;i>=0;i--){
         int x=a[i];
-        int tpp=abs(x);
         int index;
         if(x>=0){
             index=((x>>(loop*8))&255)+255;
@@ -105,22 +112,9 @@ void r_sort(int a[],int n){
         int z=bucket[index]-1;
         y[z]=x;
         bucket[index]--;
-        if(loop==0){
-        if (tpp > maxval) {maxval = tpp;}
-        }
     }   
         
-    memcpy(a,y,sizeof(y));
-
-    if(loop==0){
-    while (maxval > 0) {
-        maxbit++;
-        maxval >>= 8;
-    }
-    if (maxbit == 0) {maxbit = 1;}
-    maxbit--;   
-    }    
-    if(loop>=maxbit){break;}    
+    memcpy(a,y,sizeof(y));   
         
     }
 }
