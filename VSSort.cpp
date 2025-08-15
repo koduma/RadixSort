@@ -31,18 +31,14 @@ using namespace std;
 
 const int LIM = (1<<30);
 const int N = 20000000;
-const int NUM_BLOCKS = 10;
-const int BLOCK_SIZE = N / NUM_BLOCKS;
 
-int y[N];
+int yy[N];
 int arr[5][N];
-int br[NUM_BLOCKS][BLOCK_SIZE];
-int y2[NUM_BLOCKS][BLOCK_SIZE];
 
 int compare(const void* a, const void* b) {
     int x = *(const int*)a;
-    int y = *(const int*)b;
-    return (x > y) - (x < y);  // オーバーフローしない
+    int yz = *(const int*)b;
+    return (x > yz) - (x < yz);  // オーバーフローしない
 }
 
 int rnd(int mini, int maxi) {
@@ -69,37 +65,58 @@ bool check_sort(int a[],int b[],int n){
     else{return false;}
 }
 
-void r_sort(int a[], int n, int y3[]){
+void r_sort(int a[],int n,int y3[]){
+
     int maxval = 0;
     for (int i = 0; i < n; i++) {
-        if (abs(a[i]) > maxval) maxval = abs(a[i]);
+        if (abs(a[i]) > maxval) {
+            maxval = abs(a[i]);
+        }
     }
     int maxbit = 0;
     while (maxval > 0) {
         maxbit++;
         maxval >>= 8;
     }
-    if (maxbit == 0) maxbit = 1;
+    if (maxbit == 0) {maxbit = 1;}
+    
+    for(int loop=0;loop<maxbit;loop++){  
 
-    for (int loop = 0; loop < maxbit; loop++) {
-        int bucket[512] = {0};
+    int bucket[530]={0};    
 
-        for (int i = 0; i < n; i++) {
-            uint32_t key = ((uint32_t)a[i]) ^ 0x80000000u;
-            int index = (key >> (loop * 8)) & 0xFF;
-            index += 256;  // オフセット
-            bucket[index]++;
+    for(int i=0;i<n;i++){
+        int x=a[i];
+        int index;
+        if(x>=0){
+            index=((x>>(loop*8))&255)+255;
         }
-        for (int i = 1; i < 512; i++) {
-            bucket[i] += bucket[i-1];
+        else{
+            index=-((-x>>(loop*8))&255)+255;
         }
-        for (int i = n - 1; i >= 0; i--) {
-            uint32_t key = ((uint32_t)a[i]) ^ 0x80000000u;
-            int index = (key >> (loop * 8)) & 0xFF;
-            index += 256;
-            y3[--bucket[index]] = a[i];
+        bucket[index]++;
+    }
+
+    for(int i=1;i<=529;i++){
+        bucket[i]+=bucket[i-1];
+    }
+        
+    for(int i=n-1;i>=0;i--){
+        int x=a[i];
+        int index;
+        if(x>=0){
+            index=((x>>(loop*8))&255)+255;
+            
         }
-        memcpy(a, y3, n * sizeof(int));
+        else{
+            index=-((-x>>(loop*8))&255)+255;
+        }
+        int z=bucket[index]-1;
+        y3[z]=x;
+        bucket[index]--;
+    }   
+        
+    memcpy(a,y3,sizeof(int)*n);   
+        
     }
 }
 
@@ -177,27 +194,6 @@ bool sub(vector<int>arr){
     return sorted;
 }
 
-int ms[N];
-
-void mt_radix_sort() {
-    #pragma omp parallel for
-    for (int i = 0; i < NUM_BLOCKS; i++) {
-        r_sort(br[i], BLOCK_SIZE, y2[i]);
-    }
-    vector<int> temp1, temp2;
-    temp1.assign(br[0], br[0] + BLOCK_SIZE); // ここを修正
-    for (int b = 1; b < NUM_BLOCKS; ++b) {
-        temp2.assign(br[b], br[b] + BLOCK_SIZE); // ここもOK
-        vector<int> merged;
-        merged.resize(temp1.size() + temp2.size());
-        merge(temp1.begin(), temp1.end(),
-                   temp2.begin(), temp2.end(),
-                   merged.begin());
-        temp1.swap(merged);
-    }
-    copy(temp1.begin(), temp1.end(), ms);
-}
-
 int main() {
     
     double start;
@@ -209,8 +205,6 @@ int main() {
         arr[2][i]=arr[0][i];
         arr[3][i]=arr[0][i];
         arr[4][i]=arr[0][i];
-        br[cs][i - (BLOCK_SIZE * cs)] = arr[0][i];
-        if ((i + 1) % BLOCK_SIZE == 0) {cs++;}
     }
 
     vector<int>vec;
@@ -227,16 +221,6 @@ int main() {
 
     printf("qsort=%lf\n",start);
 
-    //start = omp_get_wtime();
-
-    //radix_sort(vec.begin(),vec.end());
-
-    //qsort(arr, N, sizeof(int), compare);
-
-    //start = omp_get_wtime()-start;
-
-    //printf("radixsort=%lf\n",start);
-
     start = omp_get_wtime();
 
     sort(arr[1],arr[1]+N);
@@ -245,32 +229,15 @@ int main() {
 
     start = omp_get_wtime()-start;
 
-    printf("sort=%lf\n",start);
+    printf("std::sort=%lf\n",start);
 
     start = omp_get_wtime();
    
-    r_sort(arr[2],N,y);
+    r_sort(arr[2],N,yy);
 
     start = omp_get_wtime()-start;
 
     printf("radix_sort=%lf\n",start);
-
-    start = omp_get_wtime();
-
-    bool ok=sub(vec);
-    //r_sort(narr,N);
-
-    start = omp_get_wtime()-start;
-
-    printf("quick_sort=%lf\n",start);
-
-    start=omp_get_wtime();
-
-    mt_radix_sort();
-
-    start = omp_get_wtime()-start;
-    
-    printf("MT_radix_sort=%lf\n",start);
 
     bool j[3]={false,false,false};
 
@@ -282,11 +249,9 @@ int main() {
 
     printf("O(N)=%lf\n",start);
 
-    j[1]=check_sort(arr[0],arr[2],N);
-    j[2]=check_sort(arr[1],arr[2],N);
-    bool MT=check_sort(ms,arr[0],N);
+    j[1]=check_sort(arr[2],arr[1],N);
 
-    if(j[0]&&j[1]&&j[2]&&ok&&MT){printf("ok\n");}
+    if(j[0]&&j[1]){printf("ok\n");}
     else{printf("ng\n");}
     
     return 0;
