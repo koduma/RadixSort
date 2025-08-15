@@ -29,14 +29,15 @@
 
 using namespace std;
 
-#define N 10000000
-#define LIM (1<<30)
+const int LIM = (1<<30);
+const int N = 20000000;
+const int NUM_BLOCKS = 10;
+const int BLOCK_SIZE = N / NUM_BLOCKS;
 
 int y[N];
-int tmp[2][N];
 int arr[5][N];
-int br[2][N/2];
-int y2[2][N/2];
+int br[NUM_BLOCKS][BLOCK_SIZE];
+int y2[NUM_BLOCKS][BLOCK_SIZE];
 
 int compare(const void* a, const void* b) {
     int x = *(const int*)a;
@@ -178,22 +179,38 @@ bool sub(vector<int>arr){
 
 int ms[N];
 
+void mt_radix_sort() {
+    #pragma omp parallel for
+    for (int i = 0; i < NUM_BLOCKS; i++) {
+        r_sort(br[i], BLOCK_SIZE, y2[i]);
+    }
+    vector<int> temp1, temp2;
+    temp1.assign(br[0], br[0] + BLOCK_SIZE); // ここを修正
+    for (int b = 1; b < NUM_BLOCKS; ++b) {
+        temp2.assign(br[b], br[b] + BLOCK_SIZE); // ここもOK
+        vector<int> merged;
+        merged.resize(temp1.size() + temp2.size());
+        merge(temp1.begin(), temp1.end(),
+                   temp2.begin(), temp2.end(),
+                   merged.begin());
+        temp1.swap(merged);
+    }
+    copy(temp1.begin(), temp1.end(), ms);
+}
+
 int main() {
     
     double start;
  
     GenRandom(arr[0],N,LIM);
+    int cs=0;
     for(int i=0;i<N;i++){
         arr[1][i]=arr[0][i];
         arr[2][i]=arr[0][i];
         arr[3][i]=arr[0][i];
         arr[4][i]=arr[0][i];
-        if(i<N/2){
-            br[0][i]=arr[0][i];
-        }
-        else{
-            br[1][i-(N/2)]=arr[0][i];
-        }
+        br[cs][i - (BLOCK_SIZE * cs)] = arr[0][i];
+        if ((i + 1) % BLOCK_SIZE == 0) {cs++;}
     }
 
     vector<int>vec;
@@ -249,12 +266,7 @@ int main() {
 
     start=omp_get_wtime();
 
-    #pragma omp parallel for
-    for(int i=0;i<2;i++){
-    r_sort(br[i],N/2,y2[i]);
-    }
-    
-    merge(br[0], br[0] + (N/2), br[1], br[1] + (N/2), ms);
+    mt_radix_sort();
 
     start = omp_get_wtime()-start;
     
